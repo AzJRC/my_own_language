@@ -1,4 +1,4 @@
-from tokens import Integer, Float, Variable, Boolean
+from tokens import Integer, Float, Variable, Boolean, CaseStatement
 
 class Interpreter:
     def __init__(self, tree, data):
@@ -82,19 +82,34 @@ class Interpreter:
 
         return Integer(output) if (lnode_type != 'FLOAT' and rnode_type != 'FLOAT') else Float(output)
     
+    def interpret_case(self, expressions, statements):
+        for i in range(len(expressions)):
+            expression = self.interpreter(expressions[i])
+            if expression:
+                return self.interpreter(statements[i])
+        return
+
+
+    
     def interpreter(self, tree=None):
         if tree is None:
             tree = self.tree
 
+        if isinstance(tree, CaseStatement):
+                exp = tree.value[0]
+                val = tree.value[1]
+                return self.interpret_case(exp, val)
+
         #no operation
-        if not isinstance(tree, list) and not isinstance(tree, Variable):
+        elif not isinstance(tree, list) and not isinstance(tree, Variable):
             return tree
         
-        if not isinstance(tree, list) and isinstance(tree, Variable):
+        elif not isinstance(tree, list) and isinstance(tree, Variable):
             return self.data.read(tree.value)
         
         # Unary operation
         elif len(tree) == 2:
+
             # left subtree
             lnode = Integer(0)
 

@@ -1,16 +1,16 @@
-from tokens import Integer, Float, Operator, LogicalOperator, ComparisonOperator, Declaration, Variable, Error
+from tokens import Integer, Float, Operator, LogicalOperator, ComparisonOperator, SpecialOperator, Declaration, Variable, ReservedToken
+
 
 class Lexer():
-
     static_entities = {
         'digits': "0123456789",
         'operators': '+-*/()=',
         'logical_operators': ['AND', 'OR', 'NOT'],
-        'comparison_operators': ['!=','<','<=','==','>=','>'],
-        'stopwords' : ' ',
-        'reserved_words': ['True', 'False'],
+        'comparison_operators': ['!=', '<', '<=', '==', '>=', '>'],
+        'stopwords': ' ',
+        'reserved_words': ['True', 'False', 'if', 'else'],
         'letters': 'abcdefghijklmnñopqrstuvwxyzABCDEFGHIJKLMNÑOPQRSTUVWXYZ',
-        'special_characters': '<>!=',
+        'special_characters': '<>!=:',
         'declarations': ['auto'],
     }
 
@@ -25,24 +25,27 @@ class Lexer():
     def move(self):
         self.i += 1
         if self.i < self.textlen:
-            self.char = self.text[self.i] #Update the character if the index if within range
+            # Update the character if the index if within range
+            self.char = self.text[self.i]
 
     def extractWord(self):
         word = ''
         while self.char in Lexer.static_entities['letters'] and self.i < self.textlen:
             word += self.char
             self.move()
-        
+
         return word
-    
-    def extractComparison(self):
-        comp_operator = ''
+
+    def extractOperator(self):
+        operator = ''
         while self.char in Lexer.static_entities['special_characters']:
-            comp_operator += self.char
+            operator += self.char
             self.move()
-        
-        return ComparisonOperator(comp_operator)
-    
+            if operator == ':': # For if... else... statements
+                return SpecialOperator(operator)
+
+        return ComparisonOperator(operator)
+
     def extractNumber(self):
         number = ''
         isFloat = False
@@ -51,19 +54,19 @@ class Lexer():
                 isFloat = True
             number += self.char
             self.move()
-        
+
         return Integer(number) if not isFloat else Float(number)
-        
+
     def tokenize(self):
         while self.i < self.textlen:
 
             # tokenize numbers
             if self.char in Lexer.static_entities['digits']:
                 self.curr_token = self.extractNumber()
-            
+
             # tokenize boolean operators
             elif self.char in Lexer.static_entities['special_characters']:
-                self.curr_token = self.extractComparison()
+                self.curr_token = self.extractOperator()
 
             # tokenize words
             elif self.char in Lexer.static_entities['letters']:
@@ -73,6 +76,8 @@ class Lexer():
                         self.curr_token = Integer(1)
                     elif word == 'False':
                         self.curr_token = Integer(0)
+                    else:
+                        self.curr_token = ReservedToken(word)
 
                 elif word in Lexer.static_entities['declarations']:
                     self.curr_token = Declaration(word)
@@ -82,7 +87,7 @@ class Lexer():
 
                 else:
                     self.curr_token = Variable(word)
-            
+
             # tokenize operators
             elif self.char in Lexer.static_entities['operators']:
                 self.curr_token = Operator(self.char)

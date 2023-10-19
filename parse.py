@@ -1,4 +1,4 @@
-from tokens import Error
+from tokens import CaseStatement
 
 class Parser:
     def __init__(self, tokens):
@@ -78,11 +78,35 @@ class Parser:
             lnode = [lnode, operation, rnode]
         return lnode
     
+    def ifElseExpression(self):
+        if_exps = []
+        acts = []
+        
+        # <IF_EXP> ::= if <exp>: <statement> { else if <exp>: <statement> } { else: <statement> }
+        while self.curr_token.value == 'if' or self.curr_token.value == 'else' and not (self.curr_token.value == 'else' and self.tokens[self.i + 1] != 'if'):
+            if self.curr_token.value == 'else' and self.tokens[self.i + 1].value == 'if':
+                self.move()
+            self.move()
+            if_exps.append(self.expression())
+            if self.curr_token.value == ':':
+                self.move()   
+                acts.append(self.statement())
+        
+        # final else case
+        if self.curr_token.value == 'else':
+            if_exps.append('else')
+            self.move()
+            self.move()
+            acts.append(self.statement())
+
+        
+        return CaseStatement([if_exps, acts])
+    
     """
     BNF Definition
 
     <VARIABLE> ::= auto <VARIABLE> = <EXPRESSION>
-    <STATEMENT> ::= <VARIABLE> | <EXPRESSION>
+    <STATEMENT> ::= <VARIABLE> | <EXPRESSION> | <CASE STATEMENT>
     """
     
     def variable(self):
@@ -101,9 +125,10 @@ class Parser:
                 rnode = self.expression()
 
                 return [lnode, operation, rnode]
-
-        elif self.curr_token.type == 'BUILT_IN_FUNCTION':
-            return self.curr_token
+        
+        # if... else... (case) statement case
+        elif self.curr_token.value == 'if':
+            return self.ifElseExpression()
         
         # arithmetic expression case
         elif self.curr_token.type in ('INTEGER', 'FLOAT', 'OPERATOR', 'LOGICAL_OPERATOR', 'VARIABLE'):
