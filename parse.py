@@ -1,4 +1,4 @@
-from tokens import CaseStatement
+from tokens import CaseStatement, loopStatement
 
 class Parser:
     def __init__(self, tokens):
@@ -53,7 +53,13 @@ class Parser:
             self.move()
             rnode = self.factor()
             lnode = [lnode, operation, rnode]
-            self.move()    
+            self.move()   
+        while self.curr_token.value in ['AND','OR', 'NOT']:
+            operation = self.curr_token
+            self.move()
+            rnode = self.factor()
+            lnode = [lnode, operation, rnode]
+            self.move()
         return lnode
     
     """
@@ -71,12 +77,13 @@ class Parser:
             self.move()
             rnode = self.term()
             lnode = [lnode, operation, rnode]
-        if self.curr_token.value in ['AND','OR', 'NOT']:
-            operation = self.curr_token
-            self.move()
-            rnode = self.expression()
-            lnode = [lnode, operation, rnode]
         return lnode
+    
+    """
+    BNF Definition
+
+    <CASE EXPRESSION> ::= if <EXPRESSION> : <STATEMENT> { else if <EXPRESSION> : <STATEMENT> } { else : <STATEMENT> }
+    """
     
     def ifElseExpression(self):
         if_exps = []
@@ -99,8 +106,26 @@ class Parser:
             self.move()
             acts.append(self.statement())
 
-        
         return CaseStatement([if_exps, acts])
+    
+
+    """ 
+    BNF Definition
+
+    <WHILE LOOP> ::= while <EXPRESSION> : <STATEMENT>
+    """
+
+    def loopExpression(self):
+        loop_type = self.curr_token.value
+        if self.curr_token.value == 'while':
+            self.move()
+            if_exp = self.expression()
+            if self.curr_token.value == ':':
+                self.move()
+                stat = self.statement()
+            
+            return loopStatement([loop_type, if_exp, stat])
+
     
     """
     BNF Definition
@@ -130,6 +155,10 @@ class Parser:
         elif self.curr_token.value == 'if':
             return self.ifElseExpression()
         
+        # while loop case
+        elif self.curr_token.value in ['while']:
+            return self.loopExpression()
+
         # arithmetic expression case
         elif self.curr_token.type in ('INTEGER', 'FLOAT', 'OPERATOR', 'LOGICAL_OPERATOR', 'VARIABLE'):
             return self.expression()

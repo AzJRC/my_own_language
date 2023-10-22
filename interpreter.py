@@ -1,4 +1,4 @@
-from tokens import Integer, Float, Variable, Boolean, CaseStatement
+from tokens import Integer, Float, Variable, Boolean, CaseStatement, loopStatement
 
 class Interpreter:
     def __init__(self, tree, data):
@@ -65,7 +65,7 @@ class Interpreter:
         rvalue = getattr(self, f'read_{rnode_type}')(rnode.value)
 
         if operator.type == 'COMPARISON_OPERATOR':
-            bool_value = self.compute_b_compare(lnode, rnode, operator)
+            bool_value = self.compute_b_compare(lnode if lnode_type != 'VARIABLE' else self.data.read(lnode.value), rnode, operator)
             return Boolean(bool_value)
         elif operator.type == 'LOGICAL_OPERATOR':
             bool_value = self.compute_b_logical(lnode, rnode, operator)
@@ -96,9 +96,22 @@ class Interpreter:
             tree = self.tree
 
         if isinstance(tree, CaseStatement):
-                exp = tree.value[0]
-                val = tree.value[1]
-                return self.interpret_case(exp, val)
+            exp = tree.value[0]
+            val = tree.value[1]
+            return self.interpret_case(exp, val)
+        
+        elif isinstance(tree, loopStatement):
+            loop_type = tree.value[0]
+            if loop_type == 'while':
+                loop_condition = tree.value[1]
+                loop_statement = tree.value[2]
+
+                while True:
+                    if self.interpreter(loop_condition):
+                        print(self.interpreter(loop_statement))
+                    else:
+                        break
+                    
 
         #no operation
         elif not isinstance(tree, list) and not isinstance(tree, Variable):

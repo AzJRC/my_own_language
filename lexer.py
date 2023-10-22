@@ -8,7 +8,7 @@ class Lexer():
         'logical_operators': ['AND', 'OR', 'NOT'],
         'comparison_operators': ['!=', '<', '<=', '==', '>=', '>'],
         'stopwords': ' ',
-        'reserved_words': ['True', 'False', 'if', 'else'],
+        'reserved_words': ['True', 'False', 'if', 'else', 'while'],
         'letters': 'abcdefghijklmnñopqrstuvwxyzABCDEFGHIJKLMNÑOPQRSTUVWXYZ',
         'special_characters': '<>!=:',
         'declarations': ['auto'],

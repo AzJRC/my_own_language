@@ -73,7 +73,11 @@ class ReservedToken(Token):
         super().__init__('RESERVED_TOKEN', value)
 
 
-
 class CaseStatement(Token):
     def __init__(self, value):
         super().__init__('CASE_STATEMENT', value)
+
+
+class loopStatement(Token):
+    def __init__(self, value):
+        super().__init__('LOOP_STATEMENT', value)
