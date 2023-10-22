@@ -18,24 +18,24 @@ class Interpreter:
         var = self.data.read(var_name)
         return getattr(self, f'read_{var.type}')(var.value)
     
-    def compute_b_compare(self, lnode, rnode, operator):
+    def compute_b_compare(self, lval, rval, operator):
         if operator.value == '!=':
-            return 1 if lnode.value != rnode.value else 0
+            return 1 if lval != rval else 0
 
         elif operator.value == '<':
-            return 1 if lnode.value < rnode.value else 0
+            return 1 if lval < rval else 0
             
         elif operator.value == '<=':
-            return 1 if lnode.value <= rnode.value else 0
+            return 1 if lval <= rval else 0
 
         elif operator.value == '==':
-            return 1 if lnode.value == rnode.value else 0
+            return 1 if lval == rval else 0
 
         elif operator.value == '>=':
-            return 1 if lnode.value >= rnode.value else 0
+            return 1 if lval >= rval else 0
 
         elif operator.value == '>':
-            return 1 if lnode.value > rnode.value else 0
+            return 1 if lval > rval else 0
         
     def compute_b_logical(self, lnode, rnode, operator):
         if operator.value == 'AND':
@@ -65,10 +65,10 @@ class Interpreter:
         rvalue = getattr(self, f'read_{rnode_type}')(rnode.value)
 
         if operator.type == 'COMPARISON_OPERATOR':
-            bool_value = self.compute_b_compare(lnode if lnode_type != 'VARIABLE' else self.data.read(lnode.value), rnode, operator)
+            bool_value = self.compute_b_compare(lvalue, rvalue, operator)
             return Boolean(bool_value)
         elif operator.type == 'LOGICAL_OPERATOR':
-            bool_value = self.compute_b_logical(lnode, rnode, operator)
+            bool_value = self.compute_b_logical(lvalue, rvalue, operator)
             return Boolean(bool_value)
 
         if operator.value == '+':
@@ -107,10 +107,12 @@ class Interpreter:
                 loop_statement = tree.value[2]
 
                 while True:
-                    if self.interpreter(loop_condition):
-                        print(self.interpreter(loop_statement))
+                    condition_outcome = self.interpreter(loop_condition)
+                    if condition_outcome.value:
+                        res = self.interpreter(loop_statement)
+                        print(res)
                     else:
-                        break
+                        return res
                     
 
         #no operation
